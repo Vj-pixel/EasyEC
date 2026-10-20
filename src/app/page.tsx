@@ -1,18 +1,3 @@
-import Link from "next/link";
-import {
-  ArrowRight,
-  Cpu,
-  FlaskConical,
-  Trophy,
-  Heart,
-  Palette,
-  Landmark,
-  Lightbulb,
-  Stethoscope,
-  Leaf,
-  PenLine,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { getFeaturedOpportunities, getOpportunityStats } from "@/lib/data/service";
 import { LandingHero } from "./landing-hero";
 import { LandingScrollSections } from "./landing-scroll-sections";

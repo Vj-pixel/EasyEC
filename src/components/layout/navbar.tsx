@@ -71,6 +71,8 @@ function NavbarInner() {
   const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  if (isHome) return null;
+
   return (
     <header
       className={cn(
@@ -179,9 +181,7 @@ function NavbarInner() {
 
 export function Navbar() {
   return (
-    <Suspense fallback={
-      <header className="sticky top-0 z-50 bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/[0.06] h-16" />
-    }>
+    <Suspense fallback={null}>
       <NavbarInner />
     </Suspense>
   );
