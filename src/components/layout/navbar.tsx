@@ -15,7 +15,6 @@ const NAV_LINKS = [
 
 function NavLinks({ onClick }: { onClick?: () => void }) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
   return (
     <>
       {NAV_LINKS.map(({ href, label }) => {
@@ -28,10 +27,8 @@ function NavLinks({ onClick }: { onClick?: () => void }) {
             className={cn(
               "px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150",
               active
-                ? "bg-blue-600 text-white"
-                : isHome
-                ? "text-white/70 hover:text-white hover:bg-white/10"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-[#1a1a1a] text-white"
+                : "text-[#737373] hover:text-white hover:bg-[#1a1a1a]"
             )}
           >
             {label}
@@ -54,8 +51,8 @@ function MobileNavLinks({ onClick }: { onClick?: () => void }) {
           className={cn(
             "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
             pathname === href
-              ? "bg-blue-50 text-blue-700"
-              : "text-slate-700 hover:bg-slate-100"
+              ? "bg-[#1a1a1a] text-white"
+              : "text-[#737373] hover:bg-[#1a1a1a] hover:text-white"
           )}
         >
           <Icon className="w-4 h-4" />
@@ -68,18 +65,10 @@ function MobileNavLinks({ onClick }: { onClick?: () => void }) {
 
 function NavbarInner() {
   const pathname = usePathname();
-  const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 transition-all duration-300",
-        isHome
-          ? "bg-[#0a0a0f]/80 backdrop-blur-md border-b border-white/[0.06]"
-          : "bg-white/95 backdrop-blur-sm border-b border-slate-200"
-      )}
-    >
+    <header className="sticky top-0 z-50 bg-[#0c0c0c]/90 backdrop-blur-md border-b border-[#1a1a1a]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -87,7 +76,7 @@ function NavbarInner() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Compass className="w-4 h-4 text-white" />
             </div>
-            <span className={cn("font-bold text-lg tracking-tight", isHome ? "text-white" : "text-slate-900")}>
+            <span className="font-bold text-lg tracking-tight text-white">
               Easy<span className="text-blue-400">EC</span>
             </span>
           </Link>
@@ -97,7 +86,7 @@ function NavbarInner() {
             <Suspense fallback={
               <div className="flex gap-1">
                 {NAV_LINKS.map(({ href, label }) => (
-                  <Link key={href} href={href} className={cn("px-3.5 py-2 rounded-lg text-sm font-medium", isHome ? "text-white/70" : "text-slate-600")}>
+                  <Link key={href} href={href} className="px-3.5 py-2 rounded-lg text-sm font-medium text-[#737373]">
                     {label}
                   </Link>
                 ))}
@@ -110,21 +99,17 @@ function NavbarInner() {
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2">
             <Link href="/explore">
-              <button className={cn("w-9 h-9 flex items-center justify-center rounded-lg transition-colors", isHome ? "text-white/60 hover:text-white hover:bg-white/10" : "text-slate-600 hover:bg-slate-100")} aria-label="Search">
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg text-[#525252] hover:text-white hover:bg-[#1a1a1a] transition-colors" aria-label="Search">
                 <Search className="w-4 h-4" />
               </button>
             </Link>
             <Link href="/dashboard">
-              <button className={cn("w-9 h-9 flex items-center justify-center rounded-lg transition-colors", isHome ? "text-white/60 hover:text-white hover:bg-white/10" : "text-slate-600 hover:bg-slate-100")} aria-label="Dashboard">
+              <button className="w-9 h-9 flex items-center justify-center rounded-lg text-[#525252] hover:text-white hover:bg-[#1a1a1a] transition-colors" aria-label="Dashboard">
                 <LayoutDashboard className="w-4 h-4" />
               </button>
             </Link>
             <Link href="/auth/signin">
-              <Button
-                variant="outline"
-                size="sm"
-                className={isHome ? "border-white/20 text-white bg-transparent hover:bg-white/10 hover:border-white/30" : ""}
-              >
+              <Button variant="outline" size="sm" className="border-[#262626] text-[#a3a3a3] bg-transparent hover:bg-[#1a1a1a] hover:text-white hover:border-[#404040]">
                 Sign in
               </Button>
             </Link>
@@ -137,7 +122,7 @@ function NavbarInner() {
 
           {/* Mobile menu toggle */}
           <button
-            className={cn("md:hidden p-2 rounded-lg transition-colors", isHome ? "text-white/70 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100")}
+            className="md:hidden p-2 rounded-lg text-[#737373] hover:bg-[#1a1a1a] hover:text-white transition-colors"
             onClick={() => setMobileOpen((v) => !v)}
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
@@ -149,7 +134,7 @@ function NavbarInner() {
 
       {/* Mobile nav */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white animate-fade-in">
+        <div className="md:hidden border-t border-[#1a1a1a] bg-[#0c0c0c] animate-fade-in">
           <nav className="px-4 py-3 space-y-1">
             <Suspense fallback={null}>
               <MobileNavLinks onClick={() => setMobileOpen(false)} />
@@ -157,18 +142,18 @@ function NavbarInner() {
             <Link
               href="/dashboard"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#737373] hover:bg-[#1a1a1a] hover:text-white"
             >
               <LayoutDashboard className="w-4 h-4" />
               Dashboard
             </Link>
           </nav>
-          <div className="px-4 pb-4 pt-2 border-t border-slate-100 flex gap-2">
+          <div className="px-4 pb-4 pt-2 border-t border-[#1a1a1a] flex gap-2">
             <Link href="/auth/signin" className="flex-1">
-              <Button variant="outline" className="w-full" size="md">Sign in</Button>
+              <Button variant="outline" className="w-full border-[#262626] text-[#a3a3a3] bg-transparent hover:bg-[#1a1a1a] hover:text-white" size="md">Sign in</Button>
             </Link>
             <Link href="/auth/register" className="flex-1">
-              <Button className="w-full" size="md">Get started</Button>
+              <Button className="w-full bg-blue-600 hover:bg-blue-700" size="md">Get started</Button>
             </Link>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight, CheckCircle } from "lucide-react";
@@ -74,6 +74,87 @@ function OppRow({ opp, delay }: { opp: Opportunity; delay: number }) {
         </div>
       </Link>
     </Reveal>
+  );
+}
+
+// ─── Cursor-spotlight problem row ────────────────────────────────────────────
+
+function SpotlightRow({ title, body, last }: { title: string; body: string; last?: boolean }) {
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const glowRef  = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const bodyRef  = useRef<HTMLParagraphElement>(null);
+  const [hovered, setHovered] = useState(false);
+
+  const onMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current || !glowRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // Direct DOM mutation — zero React re-render on every frame
+    glowRef.current.style.background =
+      `radial-gradient(circle 550px at ${x}px ${y}px, rgba(59,130,246,0.10) 0%, rgba(99,102,241,0.04) 40%, transparent 70%)`;
+  }, []);
+
+  const onEnter = useCallback(() => {
+    setHovered(true);
+    if (glowRef.current)  glowRef.current.style.opacity  = "1";
+    if (titleRef.current) titleRef.current.style.color   = "#2e2e2e";
+    if (bodyRef.current)  bodyRef.current.style.color    = "#737373";
+  }, []);
+
+  const onLeave = useCallback(() => {
+    setHovered(false);
+    if (glowRef.current)  glowRef.current.style.opacity  = "0";
+    if (titleRef.current) titleRef.current.style.color   = "#1e1e1e";
+    if (bodyRef.current)  bodyRef.current.style.color    = "#3a3a3a";
+  }, []);
+
+  void hovered; // used only to satisfy lint — all visual state is imperative
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={onMove}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      className="relative overflow-hidden cursor-default py-8"
+      style={{ borderBottom: !last ? "1px solid #1a1a1a" : undefined }}
+    >
+      {/* Spotlight layer — mutated directly */}
+      <div
+        ref={glowRef}
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          opacity: 0,
+          transition: "opacity 0.25s ease",
+        }}
+      />
+
+      {/* Ghost headline — mutated directly on hover */}
+      <div
+        ref={titleRef}
+        className="relative font-black leading-none select-none mb-2"
+        style={{
+          fontSize: "clamp(2.5rem, 6vw, 5rem)",
+          letterSpacing: "-0.025em",
+          color: "#1e1e1e",
+          transition: "color 0.2s ease",
+        }}
+      >
+        {title}
+      </div>
+
+      <p
+        ref={bodyRef}
+        className="relative text-sm max-w-xl leading-relaxed"
+        style={{ color: "#3a3a3a", transition: "color 0.2s ease" }}
+      >
+        {body}
+      </p>
+    </div>
   );
 }
 
@@ -166,7 +247,7 @@ export function LandingScrollSections({ featured, stats }: Props) {
             <Label>The problem we solve</Label>
           </Reveal>
 
-          <div className="space-y-0">
+          <div>
             {[
               {
                 title: "Scattered.",
@@ -182,18 +263,7 @@ export function LandingScrollSections({ featured, stats }: Props) {
               },
             ].map(({ title, body }, i) => (
               <Reveal key={title} delay={i * 0.08}>
-                <div
-                  className="py-8"
-                  style={{ borderBottom: i < 2 ? BORDER : undefined }}
-                >
-                  <div
-                    className="font-black text-[#1f1f1f] mb-2 leading-none select-none"
-                    style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
-                  >
-                    {title}
-                  </div>
-                  <p className="text-[#737373] text-sm max-w-xl leading-relaxed">{body}</p>
-                </div>
+                <SpotlightRow title={title} body={body} last={i === 2} />
               </Reveal>
             ))}
           </div>
