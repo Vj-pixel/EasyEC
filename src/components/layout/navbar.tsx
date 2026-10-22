@@ -71,8 +71,6 @@ function NavbarInner() {
   const isHome = pathname === "/";
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (isHome) return null;
-
   return (
     <header
       className={cn(

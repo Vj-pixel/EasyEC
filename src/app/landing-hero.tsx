@@ -1,240 +1,166 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import anime from "animejs";
+import { AnimatedCounter } from "@/components/ui/animated-counter";
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const BG    = "#f5f0e8";
-const INK   = "#1a1408";
-const RED   = "#c8291a";
-const MUTED = "#7a6e5e";
+const EXAMPLES = [
+  "aerospace internship near San Jose",
+  "remote research for beginners",
+  "free summer coding programs",
+  "robotics competition Bay Area",
+  "biology lab internship high school",
+];
 
-const DISPLAY  = "var(--font-fraunces), 'Georgia', serif";
-const BODY     = "var(--font-newsreader), 'Georgia', serif";
-const MONO     = "var(--font-jetbrains), 'Courier New', monospace";
+const QUICK = ["Aerospace", "Research", "Free programs", "Remote", "Competitions"];
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 interface Props {
   stats: { total: number; free: number; remote: number; noExperienceRequired: number };
 }
 
 export function LandingHero({ stats }: Props) {
-  // Staggered entrance — one pass, nothing else animated
+  const [query, setQuery]           = useState("");
+  const [placeholder, setPlaceholder] = useState(EXAMPLES[0]);
+  const [exIdx, setExIdx]           = useState(0);
+  const [charIdx, setCharIdx]       = useState(0);
+  const [deleting, setDeleting]     = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Typewriter placeholder
+  useEffect(() => {
+    const ex = EXAMPLES[exIdx];
+    if (!deleting) {
+      if (charIdx <= ex.length) {
+        timer.current = setTimeout(() => { setPlaceholder(ex.slice(0, charIdx)); setCharIdx(c => c + 1); }, 40);
+      } else {
+        timer.current = setTimeout(() => setDeleting(true), 2400);
+      }
+    } else {
+      if (charIdx > 0) {
+        timer.current = setTimeout(() => { setPlaceholder(ex.slice(0, charIdx - 1)); setCharIdx(c => c - 1); }, 24);
+      } else {
+        setDeleting(false);
+        setExIdx(i => (i + 1) % EXAMPLES.length);
+      }
+    }
+    return () => clearTimeout(timer.current);
+  }, [charIdx, deleting, exIdx]);
+
+  // Single-pass entrance stagger — nothing loops
   useEffect(() => {
     anime({
-      targets: ".ed-reveal",
+      targets: ".h-reveal",
       opacity: [0, 1],
-      translateY: [14, 0],
-      duration: 480,
-      delay: anime.stagger(65, { start: 80 }),
-      easing: "easeOutCubic",
+      translateY: [20, 0],
+      duration: 520,
+      delay: anime.stagger(70, { start: 60 }),
+      easing: "easeOutExpo",
     });
   }, []);
 
   return (
-    <div style={{ background: BG, color: INK, fontFamily: BODY, minHeight: "100vh" }}>
+    <section className="bg-[#0c0c0c] text-white min-h-[calc(100vh-64px)] flex flex-col justify-center">
+      <div className="w-full max-w-7xl mx-auto px-5 sm:px-8 py-20">
 
-      {/* ── MASTHEAD ──────────────────────────────────────────── */}
-      <div style={{ borderBottom: `1px solid ${INK}` }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-
-          {/* Top bar: issue info */}
-          <div
-            className="ed-reveal flex items-center justify-between py-2"
-            style={{ fontFamily: MONO, fontSize: "0.65rem", letterSpacing: "0.08em", color: MUTED }}
+        {/* Status pill */}
+        <div className="h-reveal mb-8 flex items-center gap-2 opacity-0">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span
+            style={{ fontFamily: "var(--font-jetbrains, monospace)", fontSize: "0.65rem", letterSpacing: "0.12em" }}
+            className="text-[#525252] uppercase"
           >
-            <span>VOL. 1, ISSUE 1 · FALL 2025</span>
-            <span>BAY AREA PILOT</span>
-          </div>
-
-          {/* Brand */}
-          <div className="ed-reveal py-4 text-center border-t" style={{ borderColor: INK }}>
-            <div
-              style={{
-                fontFamily: DISPLAY,
-                fontSize: "clamp(2.8rem, 8vw, 6rem)",
-                fontWeight: 900,
-                lineHeight: 1,
-                letterSpacing: "-0.03em",
-              }}
-            >
-              EasyEC
-            </div>
-            <div
-              style={{
-                fontFamily: MONO,
-                fontSize: "0.65rem",
-                letterSpacing: "0.18em",
-                color: MUTED,
-                marginTop: "0.35rem",
-                textTransform: "uppercase",
-              }}
-            >
-              The Extracurricular Intelligence Briefing
-            </div>
-          </div>
+            Bay Area pilot · {stats.total}+ programs live
+          </span>
         </div>
-      </div>
 
-      {/* ── TOC NAV ───────────────────────────────────────────── */}
-      <div style={{ borderBottom: `3px solid ${INK}` }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="ed-reveal flex flex-wrap items-center gap-x-6 gap-y-1 py-2.5">
-            <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 flex-1">
-              {[
-                ["Opportunities", "/explore"],
-                ["Research",      "/explore?q=research"],
-                ["Competitions",  "/explore?q=competition"],
-                ["Free programs", "/explore?q=free"],
-              ].map(([label, href]) => (
-                <Link
-                  key={href}
-                  href={href}
-                  style={{ fontFamily: BODY, fontSize: "0.8rem", color: INK }}
-                  className="hover:underline underline-offset-2"
-                >
-                  {label}
-                </Link>
-              ))}
-            </nav>
-            <div className="flex items-center gap-4 ml-auto">
-              <Link
-                href="/submit"
-                style={{ fontFamily: BODY, fontSize: "0.8rem", color: RED, fontStyle: "italic" }}
-                className="hover:underline underline-offset-2"
-              >
-                Submit a listing →
-              </Link>
-              <Link
-                href="/auth/signin"
-                style={{ fontFamily: MONO, fontSize: "0.7rem", letterSpacing: "0.06em", color: MUTED }}
-                className="hover:underline underline-offset-2"
-              >
-                SIGN IN
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── HERO GRID ─────────────────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
-
-        {/* Deck / overline */}
-        <div
-          className="ed-reveal pt-8 pb-5"
-          style={{
-            fontFamily: BODY,
-            fontSize: "clamp(0.9rem, 1.8vw, 1.1rem)",
-            fontStyle: "italic",
-            color: MUTED,
-            borderBottom: `1px solid ${INK}`,
-          }}
+        {/* Headline */}
+        <h1
+          className="h-reveal font-black tracking-tight leading-[0.92] text-white mb-8 opacity-0"
+          style={{ fontSize: "clamp(3.4rem, 9vw, 7.5rem)" }}
         >
-          For the student who doesn&apos;t know the right people.
-        </div>
+          Find what<br />you&apos;re made<br />for.
+        </h1>
 
-        {/* Two-column: headline left, sidebar right */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1px_1fr] gap-0 py-10">
+        {/* Subline */}
+        <p className="h-reveal text-[#737373] text-lg max-w-lg mb-10 leading-relaxed opacity-0">
+          Every internship, research program, and competition — in one place,
+          verified, free to access.
+        </p>
 
-          {/* Left: headline + CTA */}
-          <div className="pr-0 lg:pr-10">
-            <h1
-              className="ed-reveal"
-              style={{
-                fontFamily: DISPLAY,
-                fontSize: "clamp(3rem, 7vw, 5.5rem)",
-                fontWeight: 900,
-                lineHeight: 1.0,
-                letterSpacing: "-0.03em",
-                marginBottom: "2rem",
-              }}
-            >
-              The Guide<br />
-              to Getting In<br />
-              Before You<br />
-              Know Anyone.
-            </h1>
-
-            <div
-              className="ed-reveal flex flex-wrap items-center gap-5"
-              style={{ borderTop: `1px solid ${INK}`, paddingTop: "1.5rem" }}
-            >
-              <Link
-                href="/explore"
-                style={{
-                  fontFamily: BODY,
-                  fontSize: "1rem",
-                  fontStyle: "italic",
-                  color: RED,
-                  textDecoration: "none",
-                }}
-                className="hover:underline underline-offset-2 flex items-center gap-1.5"
+        {/* Search bar */}
+        <div className="h-reveal max-w-2xl opacity-0">
+          <form
+            action="/explore"
+            method="get"
+            className="flex items-stretch border border-[#262626] bg-[#141414] rounded-lg overflow-hidden focus-within:border-[#3b82f6] transition-colors duration-150"
+          >
+            <div className="relative flex-1">
+              <svg
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#525252] pointer-events-none"
+                fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
               >
-                Browse the directory →
-              </Link>
-              <span style={{ fontFamily: MONO, fontSize: "0.65rem", color: MUTED, letterSpacing: "0.06em" }}>
-                {stats.total}+ programs · free to use
-              </span>
+                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                name="q"
+                type="text"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={placeholder || "Search programs…"}
+                className="w-full pl-11 pr-4 py-4 bg-transparent text-white text-sm focus:outline-none placeholder:text-[#404040]"
+              />
             </div>
-          </div>
+            <button
+              type="submit"
+              className="flex items-center gap-2 px-5 py-4 bg-[#1e1e1e] border-l border-[#262626] text-[#a3a3a3] hover:text-white hover:bg-[#242424] transition-colors duration-150 text-sm font-medium shrink-0"
+            >
+              Search <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </form>
 
-          {/* Vertical rule */}
-          <div
-            className="hidden lg:block"
-            style={{ background: INK, width: "1px" }}
-          />
-
-          {/* Right: sidebar rundown */}
-          <div className="ed-reveal hidden lg:block pl-10 pt-0">
-            {[
-              {
-                label: "THIS ISSUE",
-                body: "Aerospace, research, competitions, and remote-friendly programs across every field.",
-              },
-              {
-                label: "VERIFIED",
-                body: "Every listing reviewed by hand. Source and last-checked date visible on each program.",
-              },
-              {
-                label: "OPEN TO",
-                body: `All grades. ${stats.noExperienceRequired}+ programs require no prior experience.`,
-              },
-              {
-                label: "COST",
-                body: `${stats.free}+ free programs. Cost is always shown upfront.`,
-              },
-            ].map(({ label, body }, i) => (
-              <div
-                key={label}
-                style={{ borderBottom: i < 3 ? `1px solid ${INK}` : undefined, paddingBottom: "1rem", marginBottom: "1rem" }}
+          {/* Quick links */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <span className="text-[#404040] text-xs">Try:</span>
+            {QUICK.map(term => (
+              <Link
+                key={term}
+                href={`/explore?q=${encodeURIComponent(term.toLowerCase())}`}
+                className="text-xs text-[#525252] hover:text-[#a3a3a3] transition-colors duration-150 underline-offset-2 hover:underline"
               >
-                <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.14em", color: MUTED, marginBottom: "0.3rem" }}>
-                  {label}
-                </div>
-                <div style={{ fontFamily: BODY, fontSize: "0.85rem", lineHeight: 1.5 }}>{body}</div>
-              </div>
+                {term}
+              </Link>
             ))}
           </div>
         </div>
 
-        {/* ── FOLIO ─────────────────────────────────────────────── */}
+        {/* Stats bar */}
         <div
-          className="ed-reveal flex flex-wrap items-center justify-between gap-2 py-3"
-          style={{
-            borderTop: `1px solid ${INK}`,
-            fontFamily: MONO,
-            fontSize: "0.6rem",
-            letterSpacing: "0.1em",
-            color: MUTED,
-          }}
+          className="h-reveal mt-14 pt-8 grid grid-cols-2 sm:grid-cols-4 gap-y-6 opacity-0"
+          style={{ borderTop: "1px solid #1f1f1f" }}
         >
-          <span>EASYEC · easyec.com</span>
-          <span>FALL 2025</span>
-          <span>{stats.total}+ PROGRAMS</span>
+          {[
+            { value: stats.free,                 label: "free programs"        },
+            { value: stats.remote,               label: "remote options"       },
+            { value: stats.total,                label: "total programs"       },
+            { value: stats.noExperienceRequired, label: "no experience needed" },
+          ].map(({ value, label }) => (
+            <div key={label}>
+              <div className="text-3xl sm:text-4xl font-black text-white tabular-nums mb-1">
+                <AnimatedCounter end={value} suffix="+" duration={1200} />
+              </div>
+              <div
+                className="text-[#525252]"
+                style={{ fontFamily: "var(--font-jetbrains, monospace)", fontSize: "0.65rem", letterSpacing: "0.08em" }}
+              >
+                {label.toUpperCase()}
+              </div>
+            </div>
+          ))}
         </div>
+
       </div>
-    </div>
+    </section>
   );
 }

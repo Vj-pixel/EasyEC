@@ -3,86 +3,74 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import type { Opportunity } from "@/lib/types";
 
-// ─── Design tokens (mirror landing-hero) ─────────────────────────────────────
-const BG      = "#f5f0e8";
-const INK     = "#1a1408";
-const RED     = "#c8291a";
-const MUTED   = "#7a6e5e";
-const BG_DARK = "#1a1408";
+// ─── Scroll reveal ────────────────────────────────────────────────────────────
 
-const DISPLAY = "var(--font-fraunces), 'Georgia', serif";
-const BODY    = "var(--font-newsreader), 'Georgia', serif";
-const MONO    = "var(--font-jetbrains), 'Courier New', monospace";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function fmtDeadline(iso?: string): string {
-  if (!iso) return "Rolling";
-  const d = new Date(`${iso}T00:00:00`);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function fmtCost(cost?: string): string {
-  if (!cost || cost === "free") return "Free";
-  if (cost === "paid") return "Paid";
-  if (cost === "stipend") return "Stipend";
-  if (cost === "scholarship") return "Scholarship";
-  return cost;
-}
-
-// ─── Scroll-reveal wrapper ────────────────────────────────────────────────────
-
-function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function Reveal({ children, delay = 0, className }: { children: React.ReactNode; delay?: number; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref as React.RefObject<Element>, { once: true, amount: 0.2 });
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 10 }}
+      className={className}
+      initial={{ opacity: 0, y: 16 }}
       animate={visible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay }}
+      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay }}
     >
       {children}
     </motion.div>
   );
 }
 
-// ─── Directory listing row ────────────────────────────────────────────────────
+// ─── Section label ────────────────────────────────────────────────────────────
 
-function ListingRow({ opp, index }: { opp: Opportunity; index: number }) {
+function Label({ children }: { children: React.ReactNode }) {
   return (
-    <Reveal delay={index * 0.04}>
+    <p style={{ fontFamily: "var(--font-jetbrains, monospace)", fontSize: "0.6rem", letterSpacing: "0.16em" }}
+       className="text-[#525252] uppercase mb-8">
+      {children}
+    </p>
+  );
+}
+
+// ─── Opportunity row ──────────────────────────────────────────────────────────
+
+function fmtDeadline(iso?: string) {
+  if (!iso) return "Rolling";
+  const d = new Date(`${iso}T00:00:00`);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function OppRow({ opp, delay }: { opp: Opportunity; delay: number }) {
+  const isRemote = opp.location.isRemote || opp.format === "remote";
+  const isFree   = opp.costType === "free";
+
+  return (
+    <Reveal delay={delay}>
       <Link
         href={`/opportunity/${opp.id}`}
-        style={{ borderBottom: `1px solid ${INK}`, display: "block" }}
-        className="group py-4 block hover:bg-[#f0ead8] transition-colors duration-150"
+        className="group flex items-center justify-between gap-4 py-4 border-b border-[#1a1a1a] hover:border-[#2a2a2a] transition-colors duration-150"
       >
-        <div className="px-5 sm:px-8 max-w-7xl mx-auto">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <div
-              style={{
-                fontFamily: DISPLAY,
-                fontSize: "clamp(1rem, 2.5vw, 1.25rem)",
-                fontWeight: 700,
-                letterSpacing: "-0.01em",
-                color: INK,
-              }}
-              className="group-hover:text-[#c8291a] transition-colors duration-150"
-            >
-              {opp.title}
-            </div>
-            <div style={{ fontFamily: MONO, fontSize: "0.65rem", letterSpacing: "0.08em", color: RED }}>
-              {fmtDeadline(opp.applicationDeadline)}
-            </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[#e5e5e5] text-sm font-semibold group-hover:text-white transition-colors truncate">
+            {opp.title}
           </div>
-          <div style={{ fontFamily: MONO, fontSize: "0.65rem", letterSpacing: "0.06em", color: MUTED, marginTop: "0.2rem" }}>
+          <div
+            className="text-[#525252] truncate mt-0.5"
+            style={{ fontFamily: "var(--font-jetbrains, monospace)", fontSize: "0.6rem", letterSpacing: "0.06em" }}
+          >
             {opp.organization.name}
-            {opp.minGrade && opp.maxGrade ? ` · Grades ${opp.minGrade}–${opp.maxGrade}` : ""}
-            {opp.costType ? ` · ${fmtCost(opp.costType)}` : ""}
-            {opp.location.isRemote ? " · Remote" : opp.location.city ? ` · ${opp.location.city}` : ""}
+            {isFree   ? " · Free"   : ""}
+            {isRemote ? " · Remote" : opp.location.city ? ` · ${opp.location.city}` : ""}
           </div>
+        </div>
+        <div
+          className="shrink-0 text-[#525252] group-hover:text-[#737373] transition-colors"
+          style={{ fontFamily: "var(--font-jetbrains, monospace)", fontSize: "0.6rem", letterSpacing: "0.08em" }}
+        >
+          {fmtDeadline(opp.applicationDeadline)}
         </div>
       </Link>
     </Reveal>
@@ -93,180 +81,155 @@ function ListingRow({ opp, index }: { opp: Opportunity; index: number }) {
 
 interface Props {
   featured: Opportunity[];
-  stats: {
-    total: number;
-    free: number;
-    remote: number;
-    noExperienceRequired: number;
-    categories: number;
-  };
+  stats: { total: number; free: number; remote: number; noExperienceRequired: number; categories: number };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function LandingScrollSections({ featured, stats }: Props) {
-  return (
-    <div style={{ background: BG, color: INK }}>
+  const DARK = "#0c0c0c";
+  const BORDER = "1px solid #1a1a1a";
 
-      {/* ── DECK INTRO ──────────────────────────────────────────── */}
-      <div style={{ borderBottom: `1px solid ${INK}` }}>
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
+  return (
+    <div className="bg-[#0c0c0c]">
+
+      {/* ── CATEGORIES ──────────────────────────────────────────── */}
+      <section style={{ borderTop: BORDER }}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
           <Reveal>
-            <div className="max-w-2xl">
-              <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.16em", color: MUTED, marginBottom: "1rem" }}>
-                ABOUT THIS ISSUE
-              </div>
-              <p style={{ fontFamily: BODY, fontSize: "clamp(1.15rem, 2.8vw, 1.5rem)", lineHeight: 1.55 }}>
-                EasyEC is a directory of extracurricular opportunities for high school students —
-                internships, research programs, competitions, and more. Every listing is verified
-                by a human. All free to access.
-              </p>
+            <Label>Browse by interest</Label>
+          </Reveal>
+          <Reveal>
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["Engineering & Tech",  "/explore?q=engineering"],
+                ["Research & Science",  "/explore?q=research"],
+                ["Competitions",        "/explore?q=competition"],
+                ["Volunteering",        "/explore?q=volunteer"],
+                ["Arts & Creative",     "/explore?q=arts"],
+                ["Civic & Leadership",  "/explore?q=civic"],
+                ["Entrepreneurship",    "/explore?q=entrepreneur"],
+                ["Healthcare",          "/explore?q=health"],
+                ["Environment",         "/explore?q=environment"],
+                ["Journalism",          "/explore?q=journalism"],
+              ].map(([name, href]) => (
+                <Link
+                  key={name}
+                  href={href}
+                  className="px-4 py-2 border border-[#262626] rounded text-sm text-[#737373] hover:border-[#3b82f6] hover:text-white transition-colors duration-150"
+                >
+                  {name}
+                </Link>
+              ))}
             </div>
           </Reveal>
         </div>
-      </div>
-
-      {/* ── DIRECTORY ───────────────────────────────────────────── */}
-      <section>
-        <Reveal>
-          <div
-            className="max-w-7xl mx-auto px-5 sm:px-8 flex items-baseline justify-between py-3"
-            style={{ borderBottom: `3px solid ${INK}` }}
-          >
-            <div style={{ fontFamily: MONO, fontSize: "0.65rem", letterSpacing: "0.16em" }}>
-              DIRECTORY — SELECTED PROGRAMS
-            </div>
-            <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.1em", color: MUTED }}>
-              DEADLINE
-            </div>
-          </div>
-        </Reveal>
-
-        {featured.map((opp, i) => (
-          <ListingRow key={opp.id} opp={opp} index={i} />
-        ))}
-
-        <Reveal>
-          <div
-            className="max-w-7xl mx-auto px-5 sm:px-8 py-5"
-            style={{ borderBottom: `1px solid ${INK}` }}
-          >
-            <Link
-              href="/explore"
-              style={{
-                fontFamily: BODY,
-                fontSize: "0.9rem",
-                fontStyle: "italic",
-                color: RED,
-              }}
-              className="hover:underline underline-offset-2"
-            >
-              View all {stats.total}+ programs in the directory →
-            </Link>
-          </div>
-        </Reveal>
       </section>
 
-      {/* ── PULL QUOTE ──────────────────────────────────────────── */}
-      <Reveal>
-        <div
-          style={{
-            borderBottom: `1px solid ${INK}`,
-            padding: "5rem 1.25rem",
-            textAlign: "center",
-          }}
-        >
-          <blockquote
-            style={{
-              fontFamily: DISPLAY,
-              fontSize: "clamp(1.6rem, 4vw, 3rem)",
-              fontWeight: 400,
-              fontStyle: "italic",
-              lineHeight: 1.25,
-              maxWidth: "780px",
-              margin: "0 auto",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            &ldquo;Most students don&apos;t fail to get into programs.
-            They fail to find out the programs exist.&rdquo;
-          </blockquote>
-          <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.12em", color: MUTED, marginTop: "2rem" }}>
-            — THE PROBLEM WE&apos;RE HERE TO FIX
-          </div>
-        </div>
-      </Reveal>
+      {/* ── FEATURED PROGRAMS ───────────────────────────────────── */}
+      <section style={{ borderTop: BORDER }}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
+          <Reveal className="flex items-baseline justify-between mb-2">
+            <Label>Featured programs</Label>
+          </Reveal>
 
-      {/* ── HOW IT WORKS ────────────────────────────────────────── */}
-      <section style={{ borderBottom: `1px solid ${INK}` }}>
-        <Reveal>
-          <div
-            className="max-w-7xl mx-auto px-5 sm:px-8 py-3"
-            style={{ borderBottom: `3px solid ${INK}` }}
-          >
-            <div style={{ fontFamily: MONO, fontSize: "0.65rem", letterSpacing: "0.16em" }}>
-              HOW IT WORKS
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16">
+            {/* Left column */}
+            <div>
+              {featured.slice(0, Math.ceil(featured.length / 2)).map((opp, i) => (
+                <OppRow key={opp.id} opp={opp} delay={i * 0.04} />
+              ))}
+            </div>
+            {/* Right column */}
+            <div>
+              {featured.slice(Math.ceil(featured.length / 2)).map((opp, i) => (
+                <OppRow key={opp.id} opp={opp} delay={(i + Math.ceil(featured.length / 2)) * 0.04} />
+              ))}
             </div>
           </div>
-        </Reveal>
 
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div
-            className="grid grid-cols-1 sm:grid-cols-3"
-            style={{ borderColor: INK }}
-          >
+          <Reveal className="mt-8">
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2 text-sm text-[#525252] hover:text-white transition-colors duration-150"
+            >
+              View all {stats.total}+ programs <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── THE ACCESS PROBLEM ──────────────────────────────────── */}
+      <section style={{ borderTop: BORDER, background: "#0f0f0f" }}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
+          <Reveal>
+            <Label>The problem we solve</Label>
+          </Reveal>
+
+          <div className="space-y-0">
             {[
               {
-                n: "1.",
-                heading: "Browse the directory.",
-                body: "Search by field, deadline, grade level, cost, or location. Every listing links directly to the source — no middleman, no account required.",
+                title: "Scattered.",
+                body: "Opportunities live on hundreds of different websites — school portals, nonprofit pages, company career sites. Most students never find them.",
               },
               {
-                n: "2.",
-                heading: "Check the fine print.",
-                body: "Each listing shows who runs it, when it was last verified, eligibility requirements, and whether it’s free. No surprises.",
+                title: "Unequal.",
+                body: "Students with well-connected parents or counselors learn about programs others never hear of. Proximity to the right people shouldn't determine access.",
               },
               {
-                n: "3.",
-                heading: "Apply directly.",
-                body: "We point you to the program’s own application. We don’t touch the process, charge a fee, or promise anything. That part is up to you.",
+                title: "Invisible.",
+                body: "Niche programs in semiconductor engineering, computational biology, or aerospace? Nearly impossible to find the right entry point on your own.",
               },
-            ].map(({ n, heading, body }, i) => (
-              <Reveal key={n} delay={i * 0.08}>
+            ].map(({ title, body }, i) => (
+              <Reveal key={title} delay={i * 0.08}>
                 <div
-                  className="py-10"
-                  style={{
-                    paddingLeft: i === 0 ? 0 : "2rem",
-                    paddingRight: i === 2 ? 0 : "2rem",
-                    borderLeft: i > 0 ? `1px solid ${INK}` : undefined,
-                  }}
+                  className="py-8"
+                  style={{ borderBottom: i < 2 ? BORDER : undefined }}
                 >
                   <div
-                    style={{
-                      fontFamily: DISPLAY,
-                      fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
-                      fontWeight: 900,
-                      color: "#d4caba",
-                      lineHeight: 1,
-                      marginBottom: "1rem",
-                    }}
+                    className="font-black text-[#1f1f1f] mb-2 leading-none select-none"
+                    style={{ fontSize: "clamp(2rem, 5vw, 4rem)" }}
                   >
-                    {n}
+                    {title}
                   </div>
-                  <h3
-                    style={{
-                      fontFamily: DISPLAY,
-                      fontSize: "1.1rem",
-                      fontWeight: 700,
-                      marginBottom: "0.6rem",
-                      letterSpacing: "-0.01em",
-                    }}
-                  >
-                    {heading}
-                  </h3>
-                  <p style={{ fontFamily: BODY, fontSize: "0.9rem", lineHeight: 1.65, color: MUTED }}>
-                    {body}
-                  </p>
+                  <p className="text-[#737373] text-sm max-w-xl leading-relaxed">{body}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+
+          <Reveal className="mt-12">
+            <p className="text-white font-bold text-xl sm:text-2xl">
+              EasyEC puts everything in one place —
+              <span className="text-[#3b82f6]"> searchable, verified, free.</span>
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── WHY IT WORKS ────────────────────────────────────────── */}
+      <section style={{ borderTop: BORDER }}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
+          <Reveal>
+            <Label>Why EasyEC</Label>
+          </Reveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
+            {[
+              { title: "One feed for everything",   body: "NASA, nonprofits, universities, and community orgs — all in one place. No more checking 20 different websites."                              },
+              { title: "Cost is always visible",    body: "Free, stipend, or scholarship-eligible — shown upfront. Filter for funded programs so cost is never a barrier."                             },
+              { title: "Built for beginners",       body: `Find programs that welcome zero experience. ${stats.noExperienceRequired}+ programs on EasyEC require none.`                               },
+              { title: "Verified and transparent",  body: "Every listing shows verification status, source, and when it was last checked."                                                             },
+              { title: "Track your applications",   body: "Save opportunities, mark your status, and see deadlines in one dashboard."                                                                 },
+              { title: "Community-powered",         body: "Students, educators, and orgs all contribute. When one person finds something, everyone benefits."                                         },
+            ].map(({ title, body }, i) => (
+              <Reveal key={title} delay={i * 0.06}>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-4 h-4 text-[#3b82f6] mt-0.5 shrink-0" />
+                  <div>
+                    <div className="text-[#e5e5e5] text-sm font-semibold mb-1">{title}</div>
+                    <div className="text-[#525252] text-sm leading-relaxed">{body}</div>
+                  </div>
                 </div>
               </Reveal>
             ))}
@@ -274,103 +237,39 @@ export function LandingScrollSections({ featured, stats }: Props) {
         </div>
       </section>
 
-      {/* ── CLASSIFIED CTA ──────────────────────────────────────── */}
-      <Reveal>
-        <div
-          style={{ borderBottom: `1px solid ${INK}`, background: BG_DARK, color: BG }}
-          className="py-14 px-5 sm:px-8"
-        >
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.16em", color: "#7a7060", marginBottom: "0.5rem" }}>
-                KNOW A PROGRAM WE MISSED?
-              </div>
-              <p style={{ fontFamily: DISPLAY, fontSize: "clamp(1.3rem, 3vw, 2rem)", fontWeight: 700, lineHeight: 1.15 }}>
-                Submit a listing.<br />
-                <span style={{ color: "#d4caba", fontWeight: 400, fontStyle: "italic" }}>We review everything by hand.</span>
-              </p>
-            </div>
+      {/* ── CTA ─────────────────────────────────────────────────── */}
+      <section style={{ borderTop: BORDER, background: "#0f0f0f" }}>
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-20">
+          <Reveal>
+            <h2
+              className="font-black text-white tracking-tight leading-[0.95] mb-6"
+              style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)" }}
+            >
+              Your next big<br />opportunity is<br />
+              <span className="text-[#3b82f6]">already out there.</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <p className="text-[#525252] text-base mb-8 max-w-sm">
+              Start exploring now. No account needed.
+            </p>
+          </Reveal>
+          <Reveal delay={0.15} className="flex flex-wrap gap-3">
+            <Link
+              href="/explore"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[#3b82f6] hover:bg-[#2563eb] text-white text-sm font-semibold rounded transition-colors duration-150"
+            >
+              Browse programs <ArrowRight className="w-4 h-4" />
+            </Link>
             <Link
               href="/submit"
-              style={{
-                fontFamily: BODY,
-                fontSize: "0.95rem",
-                fontStyle: "italic",
-                color: BG,
-                border: `1px solid ${BG}`,
-                padding: "0.6rem 1.4rem",
-                display: "inline-block",
-                flexShrink: 0,
-              }}
-              className="hover:bg-white hover:text-[#1a1408] transition-colors duration-150"
+              className="inline-flex items-center gap-2 px-5 py-3 border border-[#262626] hover:border-[#404040] text-[#737373] hover:text-white text-sm font-medium rounded transition-colors duration-150"
             >
-              Submit a listing →
+              Submit a listing
             </Link>
-          </div>
+          </Reveal>
         </div>
-      </Reveal>
-
-      {/* ── COLOPHON ────────────────────────────────────────────── */}
-      <Reveal>
-        <footer className="max-w-7xl mx-auto px-5 sm:px-8 py-8">
-          <div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-            style={{ borderBottom: `1px solid #d4caba`, paddingBottom: "2rem", marginBottom: "1.5rem" }}
-          >
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.14em", color: MUTED, marginBottom: "0.5rem" }}>
-                PUBLICATION
-              </div>
-              <p style={{ fontFamily: BODY, fontSize: "0.8rem", color: MUTED, lineHeight: 1.6 }}>
-                EasyEC is published online and updated weekly. All listings are verified
-                by hand. Vol. 1, Issue 1, Fall 2025.
-              </p>
-            </div>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.14em", color: MUTED, marginBottom: "0.5rem" }}>
-                QUICK LINKS
-              </div>
-              <div style={{ fontFamily: BODY, fontSize: "0.8rem" }} className="space-y-1">
-                {[
-                  ["Browse opportunities", "/explore"],
-                  ["Submit a listing",     "/submit"],
-                  ["Education news",       "/education"],
-                  ["Admin portal",         "/admin"],
-                ].map(([label, href]) => (
-                  <div key={href}>
-                    <Link href={href} style={{ color: MUTED }} className="hover:underline underline-offset-2">
-                      {label}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.14em", color: MUTED, marginBottom: "0.5rem" }}>
-                MISSION
-              </div>
-              <p style={{ fontFamily: BODY, fontSize: "0.8rem", color: MUTED, lineHeight: 1.6 }}>
-                Built for the Congressional App Challenge. Every student deserves access
-                to opportunities that match their interests — not just the ones who know
-                the right people.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span style={{ fontFamily: MONO, fontSize: "0.6rem", letterSpacing: "0.1em", color: MUTED }}>
-              © 2025 EASYEC · ALL LISTINGS VERIFIED BY HAND · PRINTED ON THE INTERNET
-            </span>
-            <Link
-              href="/auth/register"
-              style={{ fontFamily: BODY, fontSize: "0.8rem", fontStyle: "italic", color: RED }}
-              className="hover:underline underline-offset-2"
-            >
-              Create an account →
-            </Link>
-          </div>
-        </footer>
-      </Reveal>
+      </section>
 
     </div>
   );

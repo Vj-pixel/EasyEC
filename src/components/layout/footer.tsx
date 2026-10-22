@@ -5,7 +5,7 @@ import { Compass, Heart } from "lucide-react";
 
 export function Footer() {
   const pathname = usePathname();
-  if (pathname === "/") return null;
+  void pathname;
   return (
     <footer className="border-t border-slate-200 bg-white mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
